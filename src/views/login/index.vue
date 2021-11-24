@@ -3,21 +3,22 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <h3 class="title">大豐旅行社帳務系統</h3>
       </div>
 
-      <el-form-item prop="username">
+      <el-form-item prop="email">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
         <el-input
-          ref="username"
-          v-model="loginForm.username"
-          placeholder="Username"
-          name="username"
+          ref="email"
+          v-model="loginForm.email"
+          placeholder="Email"
+          name="email"
           type="text"
           tabindex="1"
           auto-complete="on"
+          prop="email"
         />
       </el-form-item>
 
@@ -44,8 +45,7 @@
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
 
       <div class="tips">
-        <span style="margin-right:20px;">username: admin</span>
-        <span> password: any</span>
+        <span style="margin-right:20px;">若無法登入，請聯繫管理員</span>
       </div>
 
     </el-form>
@@ -54,32 +54,20 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
+import { db } from '@/db.js'
+import { firebaseApp } from '@/db.js'
 
 export default {
   name: 'Login',
   data() {
-    const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
-      } else {
-        callback()
-      }
-    }
-    const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
-      } else {
-        callback()
-      }
-    }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        email: '',
+        password: ''
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        email: [{ required: true, trigger: 'blur', }],
+        password: [{ required: true, trigger: 'blur',  }]
       },
       loading: false,
       passwordType: 'password',
@@ -96,6 +84,9 @@ export default {
   },
   methods: {
     showPwd() {
+      firebaseApp.auth().signOut()
+      console.log(firebaseApp.auth())
+
       if (this.passwordType === 'password') {
         this.passwordType = ''
       } else {
@@ -108,13 +99,16 @@ export default {
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
-          this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || '/' })
-            this.loading = false
-          }).catch(() => {
-            this.loading = false
-          })
+          firebaseApp.auth().signInWithEmailAndPassword(this.loginForm.email, this.loginForm.password).then(() => {
+            console.log(firebaseApp.auth())
+
+              this.$router.push({ path: '/dashboard' })
+              console.log('OK');
+
+
+          }).catch((error) => {
+            console.log(error.message);
+          });   
         } else {
           console.log('error submit!!')
           return false

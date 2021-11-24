@@ -36,6 +36,8 @@ import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 
+import { firebaseApp } from '@/db.js'
+
 export default {
   components: {
     Breadcrumb,
@@ -55,6 +57,17 @@ export default {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
+  },mounted(){
+    firebaseApp.auth().onAuthStateChanged(user=>{
+
+      if (user) {
+        // if is logged in, redirect to the home page
+      }else{
+        this.$router.push({ path: '/login' })
+        console.log('NO')
+      }
+
+    });
   }
 }
 </script>
